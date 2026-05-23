@@ -1,0 +1,29 @@
+# Series mapping for Build at Scale blog archive.
+#
+# Update this file when a new post is published in a series:
+#   1. Find the CUID of the new post (the .md filename in repo root, minus .md)
+#   2. Add a line under `posts:` with `<cuid>: <series-slug>`
+#   3. Commit and push. The GitHub Action will regenerate README.md.
+#
+# Posts not in any series can be omitted from `posts:`.
+
+series:
+  architecture-dojo:
+    name: Architecture Dojo
+    url: https://blog.simukappu.com/series/architecture-dojo
+  agentic-ai:
+    name: Agentic AI
+    url: https://blog.simukappu.com/series/agentic-ai
+  ai-driven-development:
+    name: AI-Driven Development
+    url: https://blog.simukappu.com/series/ai-driven-development
+
+posts:
+  # 4 Lessons from Dissecting Production Systems at Scale (2026-04-07)
+  cmnono69k00np1qqe42wh5hj3: architecture-dojo
+  # Scaling Peak Traffic (2026-04-14)
+  # cmnynn6wy00dx2ble67kjfex9 belongs to no series
+  # Resilience Beyond Multi-AZ (2026-05-05)
+  cmosp6mob00bx2flrfhnj04up: architecture-dojo
+  # AI Agent Evaluation: What, How, When (2026-05-22)
+  cmpgmuuey005h1smtfls5edde: agentic-ai
