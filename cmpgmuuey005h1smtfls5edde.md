@@ -27,7 +27,7 @@ This is the first post in a short series on AI agent evaluation at scale. Here I
 > 3.  **Three execution models, identical assertions: wall time, cost, and trial count land in measurably different quadrants.** Cassette replay, live LLM, and trace-based evaluator do not form a tool ranking. They form a category boundary that decides which execution models can realistically sit on a per-PR CI gate.
 >     
 
-> **Where I'm coming from.** I maintain [agentverify](https://github.com/simukappu/agentverify), an OSS pytest plugin that sits in the deterministic-test category this post defines, and the Section 3 benchmark includes it as one of three execution models. The methodology and harness live in a public repository, so the numbers are auditable rather than just stated. Readers should still bring the usual scepticism that comes with an author writing about the space their own tool is in.
+*Where I'm coming from.* I maintain [agentverify](https://github.com/simukappu/agentverify), an OSS pytest plugin that sits in the deterministic-test category this post defines, and the Section 3 benchmark includes it as one of three execution models. The methodology and harness live in a public repository, so the numbers are auditable rather than just stated. Readers should still bring the usual scepticism that comes with an author writing about the space their own tool is in.
 
 ## 1\. Three axes: Target × Method × Stage
 
