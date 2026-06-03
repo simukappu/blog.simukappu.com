@@ -5,13 +5,27 @@ on:
     branches: [main]
     paths:
       - "*.md"
-      - "series.yml"
       - "tools/build-index.py"
+      - "tools/update-series.py"
       - ".github/workflows/build-index.yml"
+  # series.yml is a generated artifact (written locally by
+  # update-series.py), so it is intentionally NOT a push trigger:
+  # committing it must not re-trigger this workflow.
   workflow_dispatch:
+    inputs:
+      refresh_series:
+        description: >-
+          Attempt to refresh series.yml from the live blog (best-effort;
+          usually fails from CI's datacenter IP, see series.yml header).
+        type: boolean
+        default: false
 
 permissions:
   contents: write
+
+concurrency:
+  group: build-index
+  cancel-in-progress: false
 
 jobs:
   build:
@@ -26,17 +40,42 @@ jobs:
       - name: Install dependencies
         run: pip install pyyaml
 
+      # Series resolution needs a headless browser to clear the Vercel
+      # security checkpoint, which blocks datacenter IPs (GitHub Actions
+      # runners). It is therefore DISABLED by default in CI: normal pushes
+      # only regenerate README.md from the committed series.yml.
+      #
+      # Authoritative series resolution is done LOCALLY (a residential IP
+      # clears the checkpoint): after publishing a post and assigning its
+      # series on Hashnode, run `python tools/update-series.py` and commit
+      # series.yml. See the series.yml header and README for the procedure.
+      #
+      # The steps below run ONLY on a manual dispatch with
+      # refresh_series=true, as a best-effort escape hatch.
+      - name: Install Chromium for Playwright
+        if: github.event_name == 'workflow_dispatch' && inputs.refresh_series
+        run: |
+          pip install "playwright==1.60.0"
+          python -m playwright install --with-deps chromium
+
+      - name: Refresh series mapping from the live blog (manual, best-effort)
+        if: github.event_name == 'workflow_dispatch' && inputs.refresh_series
+        continue-on-error: true
+        run: python tools/update-series.py --full
+
       - name: Build README
+        if: always()
         run: python tools/build-index.py
 
       - name: Commit if changed
+        if: always()
         run: |
-          if [[ -n "$(git status --porcelain README.md)" ]]; then
+          if [[ -n "$(git status --porcelain series.yml README.md)" ]]; then
             git config user.name "github-actions[bot]"
             git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-            git add README.md
-            git commit -m "chore: regenerate README index"
+            git add series.yml README.md
+            git commit -m "chore: refresh series mapping and README index"
             git push
           else
-            echo "README is up to date."
+            echo "series.yml and README are up to date."
           fi
