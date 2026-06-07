@@ -6,7 +6,7 @@
 
 | Published | Title | Series | Post | Markdown |
 |---|---|---|---|---|
-| 2026-06-07 | Scaling Without Losing Count — Architecture Dojo 2022 | — | [Read on Hashnode](https://blog.simukappu.com/scaling-without-losing-count-architecture-dojo-2022) | [`cmq3bwimk000c1spq0s0z8n0i.md`](./cmq3bwimk000c1spq0s0z8n0i.md) |
+| 2026-06-07 | Scaling Without Losing Count — Architecture Dojo 2022 | [Architecture Dojo](https://blog.simukappu.com/series/architecture-dojo) | [Read on Hashnode](https://blog.simukappu.com/scaling-without-losing-count-architecture-dojo-2022) | [`cmq3bwimk000c1spq0s0z8n0i.md`](./cmq3bwimk000c1spq0s0z8n0i.md) |
 | 2026-06-02 | Three Pivots in AI-Driven Development | [AI-Driven Development](https://blog.simukappu.com/series/ai-driven-development) | [Read on Hashnode](https://blog.simukappu.com/three-pivots-in-ai-driven-development) | [`cmpwlc3l5001k1sk5fqn7eg11.md`](./cmpwlc3l5001k1sk5fqn7eg11.md) |
 | 2026-05-22 | AI Agent Evaluation: What, How, When | [Agentic AI](https://blog.simukappu.com/series/agentic-ai) | [Read on Hashnode](https://blog.simukappu.com/ai-agent-evaluation-what-how-when) | [`cmpgmuuey005h1smtfls5edde.md`](./cmpgmuuey005h1smtfls5edde.md) |
 | 2026-05-05 | Resilience Beyond Multi-AZ: Bulkheads and Shock Absorbers — Architecture Dojo 2024 | [Architecture Dojo](https://blog.simukappu.com/series/architecture-dojo) | [Read on Hashnode](https://blog.simukappu.com/resilience-beyond-multi-az-bulkheads-and-shock-absorbers-architecture-dojo-2024) | [`cmosp6mob00bx2flrfhnj04up.md`](./cmosp6mob00bx2flrfhnj04up.md) |
