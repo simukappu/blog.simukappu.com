@@ -5,12 +5,14 @@ on:
     branches: [main]
     paths:
       - "*.md"
+      # series.yml is a push trigger so a manual series.yml update (applied
+      # by hand on the mirror) regenerates README.md via CI. The bot's own
+      # README commit is pushed with the default GITHUB_TOKEN, which does not
+      # trigger another workflow run, so this cannot recurse.
+      - "series.yml"
       - "tools/build-index.py"
       - "tools/update-series.py"
       - ".github/workflows/build-index.yml"
-  # series.yml is a generated artifact (written locally by
-  # update-series.py), so it is intentionally NOT a push trigger:
-  # committing it must not re-trigger this workflow.
   workflow_dispatch:
     inputs:
       refresh_series:
