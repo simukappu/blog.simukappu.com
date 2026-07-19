@@ -17,8 +17,8 @@ on:
     inputs:
       refresh_series:
         description: >-
-          Attempt to refresh series.yml from the live blog (best-effort;
-          usually fails from CI's datacenter IP, see series.yml header).
+          Refresh series.yml from the Hashnode GraphQL API (requires the
+          HASHNODE_PAT repository secret; see series.yml header).
         type: boolean
         default: false
 
@@ -42,28 +42,17 @@ jobs:
       - name: Install dependencies
         run: pip install pyyaml
 
-      # Series resolution needs a headless browser to clear the Vercel
-      # security checkpoint, which blocks datacenter IPs (GitHub Actions
-      # runners). It is therefore DISABLED by default in CI: normal pushes
-      # only regenerate README.md from the committed series.yml.
-      #
-      # Authoritative series resolution is done LOCALLY (a residential IP
-      # clears the checkpoint): after publishing a post and assigning its
-      # series on Hashnode, run `python tools/update-series.py` and commit
-      # series.yml. See the series.yml header and README for the procedure.
-      #
-      # The steps below run ONLY on a manual dispatch with
-      # refresh_series=true, as a best-effort escape hatch.
-      - name: Install Chromium for Playwright
-        if: github.event_name == 'workflow_dispatch' && inputs.refresh_series
-        run: |
-          pip install "playwright==1.60.0"
-          python -m playwright install --with-deps chromium
-
-      - name: Refresh series mapping from the live blog (manual, best-effort)
+      # Series resolution reads the Hashnode GraphQL API and needs the
+      # HASHNODE_PAT repository secret (paid-plan token). Normal pushes only
+      # regenerate README.md from the committed series.yml; the refresh runs
+      # on manual dispatch with refresh_series=true. Local runs remain the
+      # default path (see tools/MAINTAINING.md).
+      - name: Refresh series mapping from the Hashnode API (manual)
         if: github.event_name == 'workflow_dispatch' && inputs.refresh_series
         continue-on-error: true
-        run: python tools/update-series.py --full
+        env:
+          HASHNODE_PAT: ${{ secrets.HASHNODE_PAT }}
+        run: python tools/update-series.py
 
       - name: Build README
         if: always()
