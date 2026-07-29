@@ -29,14 +29,61 @@ BLOG_TAGLINE_HTML = "system design, distributed systems, and AI in production"
 
 FRONTMATTER_RE = re.compile(r"^---\n(.*?)\n---\n", re.DOTALL)
 
+# A top-level `key: "value"` line, capturing the value between the outer quotes.
+QUOTED_SCALAR_RE = re.compile(r'^([ \t]*)([A-Za-z_][\w-]*):[ \t]*"(.*)"[ \t]*$')
+
+
+class FrontmatterError(Exception):
+    """Frontmatter exists but cannot be parsed even after repair."""
+
+    def __init__(self, path: Path, cause: Exception) -> None:
+        super().__init__(f"cannot parse frontmatter in {path.name}: {cause}")
+        self.path = path
+
+
+def repair_quoted_scalars(block: str) -> str:
+    """Escape inner double quotes in `key: "value"` lines.
+
+    Hashnode's backup export writes the title as a double-quoted YAML scalar
+    without escaping double quotes inside it. A title such as
+    `Defining "Good Enough" at National Scale` therefore produces invalid YAML,
+    which PyYAML reports as `expected <block end>, but found '<scalar>'`. Re-emit
+    those lines with the inner quotes escaped so the value survives intact.
+
+    Only called after a parse failure, so frontmatter that is already valid, and
+    in particular values that escape their quotes properly, is never rewritten.
+    """
+    out: list[str] = []
+    for line in block.split("\n"):
+        match = QUOTED_SCALAR_RE.match(line)
+        if match and '"' in match.group(3):
+            indent, key, value = match.groups()
+            escaped = value.replace("\\", "\\\\").replace('"', '\\"')
+            out.append(f'{indent}{key}: "{escaped}"')
+        else:
+            out.append(line)
+    return "\n".join(out)
+
 
 def parse_frontmatter(path: Path) -> dict | None:
-    """Return frontmatter dict or None if missing/invalid."""
-    text = path.read_text(encoding="utf-8")
+    """Return the frontmatter dict, or None when the file has no frontmatter."""
+    text = path.read_text(encoding="utf-8-sig")
     match = FRONTMATTER_RE.match(text)
     if not match:
         return None
-    return yaml.safe_load(match.group(1))
+    block = match.group(1)
+    try:
+        return yaml.safe_load(block)
+    except yaml.YAMLError as first_error:
+        try:
+            data = yaml.safe_load(repair_quoted_scalars(block))
+        except yaml.YAMLError:
+            raise FrontmatterError(path, first_error) from first_error
+        print(
+            f"note: repaired unescaped double quotes in {path.name} frontmatter",
+            file=sys.stderr,
+        )
+        return data
 
 
 def collect_posts(repo_root: Path) -> list[dict]:
@@ -124,7 +171,13 @@ def main() -> int:
     series_meta = series_data.get("series", {}) or {}
     series_map = series_data.get("posts", {}) or {}
 
-    posts = collect_posts(REPO_ROOT)
+    try:
+        posts = collect_posts(REPO_ROOT)
+    except FrontmatterError as exc:
+        # Fail loudly rather than dropping the post: an index that silently
+        # omits an article is worse than a red build.
+        print(f"error: {exc}", file=sys.stderr)
+        return 1
     if not posts:
         print("error: no posts found in repo root", file=sys.stderr)
         return 1
