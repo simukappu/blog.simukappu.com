@@ -20,7 +20,7 @@ on:
           Refresh series.yml from the Hashnode GraphQL API (requires the
           HASHNODE_PAT repository secret; see series.yml header).
         type: boolean
-        default: false
+        default: true
 
 permissions:
   contents: write
@@ -42,17 +42,51 @@ jobs:
       - name: Install dependencies
         run: pip install pyyaml
 
-      # Series resolution reads the Hashnode GraphQL API and needs the
-      # HASHNODE_PAT repository secret (paid-plan token). Normal pushes only
-      # regenerate README.md from the committed series.yml; the refresh runs
-      # on manual dispatch with refresh_series=true. Local runs remain the
-      # default path (see tools/MAINTAINING.md).
-      - name: Refresh series mapping from the Hashnode API (manual)
-        if: github.event_name == 'workflow_dispatch' && inputs.refresh_series
+      # Hashnode's backup integration pushes one <cuid>.md per post into the
+      # repository root. A file that is newly *added* is a newly published post
+      # whose series membership cannot be in the committed series.yml yet, so
+      # that is the one push that has to hit the API. Pushes that only modify an
+      # existing post, series.yml, or the tools need README regeneration alone.
+      #
+      # The added-file list comes from the push event payload rather than git
+      # history, so the shallow default checkout is enough. The payload caps
+      # commits at 20; Hashnode backup pushes are one commit per post, so that
+      # ceiling is not reachable on the automated path. The root-level, non-README
+      # filter mirrors what build-index.py itself treats as a post.
+      - name: Check whether the push added a new post file
+        id: detect
+        if: github.event_name == 'push'
+        run: |
+          added=$(jq -r '[.commits[]?.added[]?] | .[]?' "$GITHUB_EVENT_PATH" \
+            | grep -E '^[^/]+\.md$' | grep -vx 'README.md' || true)
+          if [[ -n "$added" ]]; then
+            echo "New post file(s) in this push:"
+            echo "$added"
+            echo "new_post=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "No new post file in this push; README regeneration only."
+            echo "new_post=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      # Reads the Hashnode GraphQL API and needs the HASHNODE_PAT repository
+      # secret (paid-plan token). Runs automatically when a new post lands, and
+      # on manual dispatch unless refresh_series is unchecked. Failure is
+      # tolerated so README is still rebuilt from the committed series.yml, and
+      # the next step turns that into a visible warning.
+      - name: Refresh series mapping from the Hashnode API
+        id: refresh
+        if: >-
+          steps.detect.outputs.new_post == 'true' ||
+          (github.event_name == 'workflow_dispatch' && inputs.refresh_series)
         continue-on-error: true
         env:
           HASHNODE_PAT: ${{ secrets.HASHNODE_PAT }}
         run: python tools/update-series.py
+
+      - name: Warn if the series refresh did not succeed
+        if: steps.refresh.outcome == 'failure'
+        run: |
+          echo "::warning title=Series refresh failed::README was built from the committed series.yml, so a new post may be missing its series. Check the HASHNODE_PAT repository secret, then re-run this workflow manually."
 
       - name: Build README
         if: always()
