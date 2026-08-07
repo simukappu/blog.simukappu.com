@@ -42,41 +42,50 @@ jobs:
       - name: Install dependencies
         run: pip install pyyaml
 
-      # Hashnode's backup integration pushes one <cuid>.md per post into the
-      # repository root. A file that is newly *added* is a newly published post
-      # whose series membership cannot be in the committed series.yml yet, so
-      # that is the one push that has to hit the API. Pushes that only modify an
-      # existing post, series.yml, or the tools need README regeneration alone.
+      # Decide whether this run has to call the Hashnode API, by comparing the
+      # checked-out state rather than by inspecting the push event.
       #
-      # The added-file list comes from the push event payload rather than git
-      # history, so the shallow default checkout is enough. The payload caps
-      # commits at 20; Hashnode backup pushes are one commit per post, so that
-      # ceiling is not reachable on the automated path. The root-level, non-README
-      # filter mirrors what build-index.py itself treats as a post.
-      - name: Check whether the push added a new post file
+      # A post that exists as a <cuid>.md backup but is absent from the `posts:`
+      # map in series.yml has not been resolved yet, which is exactly the state a
+      # newly published post leaves behind. Asking that question needs no event
+      # payload, so it holds whether Hashnode's backup integration presents the
+      # post as an added file or as a modification of one it had already synced.
+      #
+      # This replaced an added-file check over the push payload
+      # (`.commits[].added[]`, filtered to root-level *.md). That check missed
+      # article 008 on 2026/08/07: the README picked the post up, because
+      # build-index.py reads the filesystem, but the Series column stayed empty
+      # because series.yml was never refreshed. The state comparison also
+      # self-heals, where the event check did not: if a refresh fails, the next
+      # push retries instead of needing a manual re-run forever.
+      #
+      # Not covered, by design: changing the series of an ALREADY published post.
+      # Its cuid is already in the map, so only the value moves, and detecting
+      # that would mean calling the API on every push. Use workflow_dispatch or
+      # run update-series.py locally (tools/MAINTAINING.md).
+      - name: Check whether any post is missing from series.yml
         id: detect
         if: github.event_name == 'push'
         run: |
-          added=$(jq -r '[.commits[]?.added[]?] | .[]?' "$GITHUB_EVENT_PATH" \
-            | grep -E '^[^/]+\.md$' | grep -vx 'README.md' || true)
-          if [[ -n "$added" ]]; then
-            echo "New post file(s) in this push:"
-            echo "$added"
-            echo "new_post=true" >> "$GITHUB_OUTPUT"
+          unmapped=$(python tools/build-index.py --list-unmapped)
+          if [[ -n "$unmapped" ]]; then
+            echo "Post cuid(s) not yet mapped in series.yml:"
+            echo "$unmapped"
+            echo "needs_refresh=true" >> "$GITHUB_OUTPUT"
           else
-            echo "No new post file in this push; README regeneration only."
-            echo "new_post=false" >> "$GITHUB_OUTPUT"
+            echo "Every post is already mapped in series.yml; README regeneration only."
+            echo "needs_refresh=false" >> "$GITHUB_OUTPUT"
           fi
 
       # Reads the Hashnode GraphQL API and needs the HASHNODE_PAT repository
-      # secret (paid-plan token). Runs automatically when a new post lands, and
+      # secret (paid-plan token). Runs automatically when a post is unmapped, and
       # on manual dispatch unless refresh_series is unchecked. Failure is
       # tolerated so README is still rebuilt from the committed series.yml, and
       # the next step turns that into a visible warning.
       - name: Refresh series mapping from the Hashnode API
         id: refresh
         if: >-
-          steps.detect.outputs.new_post == 'true' ||
+          steps.detect.outputs.needs_refresh == 'true' ||
           (github.event_name == 'workflow_dispatch' && inputs.refresh_series)
         continue-on-error: true
         env:
