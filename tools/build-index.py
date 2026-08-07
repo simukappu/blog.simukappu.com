@@ -6,13 +6,21 @@ than README.md), joins it with `series.yml`, and renders an article
 index into README.md.
 
 Usage:
-    python tools/build-index.py
+    python tools/build-index.py                  # regenerate README.md
+    python tools/build-index.py --list-unmapped  # print post cuids that
+                                                 #   series.yml does not map
+
+--list-unmapped writes nothing. CI uses it to decide whether to call the
+Hashnode API: a post present in the backups but absent from the `posts:` map
+has not been resolved yet, which is the state a newly published post leaves
+behind. See tools/MAINTAINING.md, "CI behavior".
 
 Dependencies:
     pyyaml
 """
 from __future__ import annotations
 
+import argparse
 import re
 import sys
 from datetime import datetime, timezone
@@ -101,6 +109,31 @@ def collect_posts(repo_root: Path) -> list[dict]:
     return posts
 
 
+def unmapped_cuids(posts: list[dict], series_map: dict) -> list[str]:
+    """Return cuids present in the backups but absent from the `posts:` map.
+
+    Membership is tested on the key, not the value. A standalone post is
+    recorded as `<cuid>: null`, which is mapped, not missing.
+
+    A backup with no cuid in its frontmatter cannot be mapped at all, and no
+    API refresh would change that, so it is warned about rather than reported
+    as missing. Reporting it would ask CI to call the API on every push forever.
+    """
+    missing: list[str] = []
+    for post in posts:
+        cuid = str(post.get("cuid", "")).strip()
+        if not cuid:
+            print(
+                f"warning: {post['__filename__']} has no cuid in frontmatter, "
+                "so it cannot be mapped to a series",
+                file=sys.stderr,
+            )
+            continue
+        if cuid not in series_map:
+            missing.append(cuid)
+    return missing
+
+
 def date_short(value: object) -> str:
     if not value:
         return ""
@@ -164,6 +197,15 @@ Last regenerated: {today}
 
 
 def main() -> int:
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument(
+        "--list-unmapped",
+        action="store_true",
+        help="print the cuid of every post absent from the posts: map in "
+             "series.yml, one per line, and exit without writing README.md",
+    )
+    args = parser.parse_args()
+
     if not SERIES_FILE.exists():
         print(f"error: {SERIES_FILE} not found", file=sys.stderr)
         return 1
@@ -181,6 +223,12 @@ def main() -> int:
     if not posts:
         print("error: no posts found in repo root", file=sys.stderr)
         return 1
+
+    if args.list_unmapped:
+        for cuid in unmapped_cuids(posts, series_map):
+            print(cuid)
+        return 0
+
     README_FILE.write_text(
         render_readme(posts, series_map, series_meta), encoding="utf-8"
     )
