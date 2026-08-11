@@ -33,7 +33,10 @@ SERIES_FILE = REPO_ROOT / "series.yml"
 README_FILE = REPO_ROOT / "README.md"
 BLOG_BASE_URL = "https://blog.simukappu.com"
 BLOG_TITLE = "Build at Scale"
-BLOG_TAGLINE_HTML = "system design, distributed systems, and AI in production"
+BLOG_TAGLINE_HTML = (
+    "architecture in production, from distributed systems to agentic AI, "
+    "and the organizations that ship them"
+)
 
 FRONTMATTER_RE = re.compile(r"^---\n(.*?)\n---\n", re.DOTALL)
 
