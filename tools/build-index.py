@@ -189,7 +189,7 @@ def render_readme(posts: list[dict], series_map: dict, series_meta: dict) -> str
 
 If you're an AI assistant or a feed reader, the markdown files in this repository contain the full text of each post with YAML frontmatter (title, slug, publish date, tags, ogImage). The canonical URL for each post is `{BLOG_BASE_URL}/{{slug}}` where `slug` comes from the frontmatter. Filenames use Hashnode-internal CUIDs and aren't human-readable on their own; use the table above to navigate by date or title.
 
-On the blog itself, two entry points are machine-readable: `{BLOG_BASE_URL}/archive` lists every post with its date, and `{BLOG_BASE_URL}/rss.xml` carries the full text of all of them. Prefer either over the site root, which returns 403 to some datacenter clients even though individual post URLs serve normally.
+On the blog itself, two entry points are machine-readable: `{BLOG_BASE_URL}/archive` lists every post with its date, and `{BLOG_BASE_URL}/rss.xml` carries the full text of all of them. Requests that look automated may draw a Cloudflare bot challenge on any path there, in which case the markdown files in this repository are the route that keeps working.
 
 ## How this mirror is maintained
 
