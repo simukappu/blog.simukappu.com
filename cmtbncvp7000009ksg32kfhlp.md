@@ -14,14 +14,14 @@ Same workload, same tools, one model swapped: the cost per request moves by 96x.
 
 This is the economics side of a design problem from [Architecture Dojo 2026](https://blog.simukappu.com/three-responses-to-ai-s-probabilistic-core-architecture-dojo-2026), the AWS Summit Japan session I host: build a shopping assistant on top of a probabilistic model and hold it to a fixed cost per request. I wrote the problem, re-ran [Tomoya Okuno](https://www.linkedin.com/in/tomoya-okuno/)'s measurements, and generalized them into the decision rule below. The measurements are his; the retelling and any errors are mine. The [session deck](https://pages.awscloud.com/rs/112-TZM-766/images/R01-03_0626_ARC446_v2.pdf) (in Japanese) reports where the finished design landed: 0.49 yen per request, 2.15s time to first token (TTFT) at P50, 3.4% quality degradation. The budget was met; this article is about how it decided the design.
 
-## TL;DR
-
-1.  **The budget is arithmetic.** Four business numbers and grade-school arithmetic set the cost per request you are allowed to spend before any code exists, and because the budget closes per request, no traffic forecast is needed. Ours came to 0.5 yen, a third of a US cent, against a measured spread of 96x between the cheapest and the most expensive model on the same workload.
-    
-2.  **Getting inside the budget is an allocation problem.** A semantic cache is worth less as a discount than as spare budget: every request it absorbs at near-zero cost funds one that has to go to the expensive model. That makes the escalation ceiling a dependent variable, set by how cheap the rest of the traffic is.
-    
-3.  **Self-hosting an open model pays off on one kind of role; managed inference is the right default everywhere else.** Three conditions decide whether a role can clear the break-even rate: the traffic is steady and high-volume, the model fits one GPU, and the input is mostly fixed prefix. A 4B router model met all three and matched the cheapest managed models on cost while beating them on quality. Outside those conditions the cost arithmetic points back to managed inference, which prices in capacity elasticity and the operational surface you would otherwise own. And managed prices keep falling as open models improve: one frontier tier's price fell 80% three weeks after it launched.
-    
+> **TL;DR**
+> 
+> 1.  **The budget is arithmetic.** Four business numbers and grade-school arithmetic set the cost per request you are allowed to spend before any code exists, and because the budget closes per request, no traffic forecast is needed. Ours came to 0.5 yen, a third of a US cent, against a measured spread of 96x between the cheapest and the most expensive model on the same workload.
+>     
+> 2.  **Getting inside the budget is an allocation problem.** A semantic cache is worth less as a discount than as spare budget: every request it absorbs at near-zero cost funds one that has to go to the expensive model. That makes the escalation ceiling a dependent variable, set by how cheap the rest of the traffic is.
+>     
+> 3.  **Self-hosting an open model pays off on one kind of role; managed inference is the right default everywhere else.** Three conditions decide whether a role can clear the break-even rate: the traffic is steady and high-volume, the model fits one GPU, and the input is mostly fixed prefix. A 4B router model met all three and matched the cheapest managed models on cost while beating them on quality. Outside those conditions the cost arithmetic points back to managed inference, which prices in capacity elasticity and the operational surface you would otherwise own. And managed prices keep falling as open models improve: one frontier tier's price fell 80% three weeks after it launched.
+>     
 
 ## The budget is arithmetic
 
