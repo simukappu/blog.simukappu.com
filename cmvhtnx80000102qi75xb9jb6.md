@@ -21,13 +21,10 @@ This picks up where my [previous article in this series](https://blog.simukappu.
 Every fact about the three companies comes from what they published themselves. The measurements are theirs and the reading across them is mine, as are any errors. The views are my own, not my employer's.
 
 > **TL;DR**
-> 
-> 1.  **When nobody states the objective, an agent optimizes for one anyway.** ASKUL's then-CEO stated one: exceed the starting point rather than return to it. Write the objective and the price you accept for it in a short statement before the agent generates anything, and have two people write it separately to check that the team shares one.
->     
-> 2.  **Reading the code is not the same as owning the context.** LY's first workshop on a 26-year-old platform did not go well and showed what information was missing. LY then built a design for that information, not a set of generated documents. Give every required artifact an owner and a refresh trigger, and budget people's time for deciding which version is authoritative, separately from the tools that generate documents from code.
->     
-> 3.  **Producing got faster, but verifying did not keep up.** Spotify's merged changes doubled with no distinct AI-authored failure signature, and the doubling is what showed some of its verification controls to be the limit. In the incident review you already run, ask two questions: did AI-authored code contribute, and did the volume of change? Then track change volume against verification capacity, not tool use.
->     
+>
+> 1. **When nobody states the objective, an agent optimizes for one anyway.** ASKUL's then-CEO stated one: exceed the starting point rather than return to it. Write the objective and the price you accept for it in a short statement before the agent generates anything, and have two people write it separately to check that the team shares one.
+> 2. **Reading the code is not the same as owning the context.** LY's first workshop on a 26-year-old platform did not go well and showed what information was missing. LY then built a design for that information, not a set of generated documents. Give every required artifact an owner and a refresh trigger, and budget people's time for deciding which version is authoritative, separately from the tools that generate documents from code.
+> 3. **Producing got faster, but verifying did not keep up.** Spotify's merged changes doubled with no distinct AI-authored failure signature, and the doubling is what showed some of its verification controls to be the limit. In the incident review you already run, ask two questions: did AI-authored code contribute, and did the volume of change? Then track change volume against verification capacity, not tool use.
 
 ## When nobody states the objective, an agent optimizes for one anyway
 
@@ -57,7 +54,7 @@ Brown field code, the second gap, did have a stage. Since the first version of A
 
 LY ran into this problem early. The slides label the August 2025 session an "AI-DLC Workshop" and say openly that it did not go well: participants saw value in the process but expected it to be difficult to use in brown field development. The scale explains why: the same slides report more than one hundred components, more than three thousand repositories, and a first release on 9 September 1999, making the platform 26 years old at the time of the talk.
 
-Looking back, that workshop was a diagnostic of the organization as much as an attempt. LY's response, as described in the talk, was to look for where the process worked, define what was missing, and build the information platform it needed, the hard way, while repeating the trial. Building it took from October 2025 to February 2026.
+Looking back, that workshop was a diagnostic of the organization as much as an attempt. LY's response, as described in the talk, was to look for where the process worked, define what was missing, and build the information platform it needed, the hard way, while repeating the trial. Building it took from October 2025 to February 2026. LY has since [written up what followed](https://techblog.lycorp.co.jp/ja/20261027a) (in Japanese). Planners now take a project from proposal to approval of the overall design themselves, and planning effort fell from about two months to about one. LY attributes the drop to several changes together.
 
 The interesting output was two organizing axes, and the slides give the reason for each. A platform this size does not fit into an agent's context as it is, and each stage needs a different resolution. So LY split the information into layers by level of detail, and each stage uses the layer it needs: the system-wide view and user-manual equivalent for basic design, the external view of each system for detailed design, and source code for implementation. Related information is grouped by domain proximity, which lets an agent find related components and follow a sequence across several of them. The information platform spans component and repository inventories, system diagrams, interface specifications, and a ubiquitous language, exposed to agents through MCP.
 
