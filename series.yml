@@ -32,6 +32,9 @@ series:
   ai-driven-development:
     name: AI-Driven Development
     url: https://blog.simukappu.com/series/ai-driven-development
+  writing-from-home:
+    name: Writing from Home
+    url: https://blog.simukappu.com/series/writing-from-home
 
 posts:
   # 4-lessons-from-dissecting-production-systems-at-scale-architecture-dojo-2025
