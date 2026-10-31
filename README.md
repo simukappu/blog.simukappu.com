@@ -6,7 +6,7 @@
 
 | Published | Title | Series | Post | Markdown |
 |---|---|---|---|---|
-| 2026-10-30 | Sent, Accepted, Reached: Automating a Home Theater That Is Also My Office | — | [Read on Hashnode](https://blog.simukappu.com/sent-accepted-reached-automating-a-home-theater-that-is-also-my-office) | [`cmvusal8p000102p1ht3j9zfq.md`](./cmvusal8p000102p1ht3j9zfq.md) |
+| 2026-10-30 | Sent, Accepted, Reached: Automating a Home Theater That Is Also My Office | [Writing from Home](https://blog.simukappu.com/series/writing-from-home) | [Read on Hashnode](https://blog.simukappu.com/sent-accepted-reached-automating-a-home-theater-that-is-also-my-office) | [`cmvusal8p000102p1ht3j9zfq.md`](./cmvusal8p000102p1ht3j9zfq.md) |
 | 2026-10-21 | AI-Driven Development Is a Diagnostic for Your Organization | [AI-Driven Development](https://blog.simukappu.com/series/ai-driven-development) | [Read on Hashnode](https://blog.simukappu.com/ai-driven-development-is-a-diagnostic-for-your-organization) | [`cmvhtnx80000102qi75xb9jb6.md`](./cmvhtnx80000102qi75xb9jb6.md) |
 | 2026-08-27 | The Unit Economics of an AI Agent — Budgeting Before You Build | [Agentic AI](https://blog.simukappu.com/series/agentic-ai) | [Read on Hashnode](https://blog.simukappu.com/the-unit-economics-of-an-ai-agent-budgeting-before-you-build) | [`cmtbncvp7000009ksg32kfhlp.md`](./cmtbncvp7000009ksg32kfhlp.md) |
 | 2026-08-07 | Three Responses to AI's Probabilistic Core — Architecture Dojo 2026 | [Architecture Dojo](https://blog.simukappu.com/series/architecture-dojo) | [Read on Hashnode](https://blog.simukappu.com/three-responses-to-ai-s-probabilistic-core-architecture-dojo-2026) | [`cmsitywvj00000ajmai7bf0vh.md`](./cmsitywvj00000ajmai7bf0vh.md) |
