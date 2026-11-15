@@ -1,6 +1,5 @@
 ---
 title: "Scaling Without Losing Count — Architecture Dojo 2022"
-seoTitle: "2 Design Challenges, One Problem: Architecture Dojo 2022"
 seoDescription: "The first Architecture Dojo, revisited: two design challenges that were one problem, and what nearly eight years maintaining one plugin"
 datePublished: 2026-06-07T05:15:42.288Z
 cuid: cmq3bwimk000c1spq0s0z8n0i
@@ -21,15 +20,11 @@ This post goes back to where the series began. ([2022 session recording](https:/
 That first edition ran as an online-only broadcast, the AWS Summit Japan of 2022 being a pandemic-era virtual event, with the three of us presenting to a camera rather than a hall. The series exists at all because of Eiichiro Uchiumi, who conceived Architecture Dojo and hosted it from that 2022 debut through 2024. I inherited the host's chair from him in 2025, and most of what I understand about how to run a design conversation on stage, I learned from watching him do it. This post is, in part, a note of thanks for the format he built.
 
 > **TL;DR**
-> 
-> 1.  **The flash-sale challenge was about protecting one number under concentrated load.** Preventing oversell while a single hot item absorbs all the traffic pushes you through sharding, a read replica, and asynchronous reconciliation, each step trading one correctness risk for another.
->     
-> 2.  **The metering challenge was the same problem, wearing the face of billing accuracy.** A heavy tenant is a hot item, double-counting is oversell, and the design starts by deciding who is responsible for which guarantee, not by drawing boxes.
->     
-> 3.  **The guarantee in a design doc and the guarantee in production are different objects.** Years of maintaining the Kinesis output plugin those designs lean on taught me that the consumer-side idempotency the design assumes is the assumption production breaks first.
->     
-> 4.  **That gap is why the 2025 Dojo dissected real systems instead of solving puzzles.** Taking a live system apart with the people who run it fits how I prefer to work, alongside the teams living with the constraints rather than handing down a finished answer.
->     
+>
+> 1. **The flash-sale challenge was about protecting one number under concentrated load.** Preventing oversell while a single hot item absorbs all the traffic pushes you through sharding, a read replica, and asynchronous reconciliation, each step trading one correctness risk for another.
+> 2. **The metering challenge was the same problem, wearing the face of billing accuracy.** A heavy tenant is a hot item, double-counting is oversell, and the design starts by deciding who is responsible for which guarantee, not by drawing boxes.
+> 3. **The guarantee in a design doc and the guarantee in production are different objects.** Years of maintaining the Kinesis output plugin those designs lean on taught me that the consumer-side idempotency the design assumes is the assumption production breaks first.
+> 4. **That gap is why the 2025 Dojo dissected real systems instead of solving puzzles.** Taking a live system apart with the people who run it fits how I prefer to work, alongside the teams living with the constraints rather than handing down a finished answer.
 
 ## Challenge 1: Protecting one number under concentrated load
 
@@ -94,5 +89,5 @@ Architecture Dojo returns to AWS Summit Japan on June 26, 2026, and the theme is
 
 What I want to bring to that stage is the question this post has really been about. When a probabilistic component enters the system, the same input stops guaranteeing the same output, and parts of what we used to declare correct move into the realm of things you observe and reconcile instead. But not everything changes. The 2022 challenges looked like a sneaker sale and an expense tracker, and underneath they were one problem about protecting a number under load. I suspect the AI era has its own invariants hiding under unfamiliar surfaces, and the work worth doing is telling them apart from what is genuinely new. The first Dojo asked how to scale without losing count; the next one asks which of those hard-won problems survive a shift to systems that no longer behave the same way twice.
 
-Watch the 2022 session recording (Japanese): [https://youtu.be/C7trZIt5H3w](https://youtu.be/C7trZIt5H3w)  
+Watch the 2022 session recording (Japanese): <https://youtu.be/C7trZIt5H3w>\
 Past sessions: [2025](https://youtu.be/L-NcmkkDJMI) | [2024](https://youtu.be/eoBlprMYx_E) | [2023](https://youtu.be/s9YqEELWutA)
