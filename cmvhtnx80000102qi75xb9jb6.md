@@ -1,6 +1,5 @@
 ---
 title: "AI-Driven Development Is a Diagnostic for Your Organization"
-seoTitle: "AI-Driven Development: 3 Places the Constraint Moves"
 seoDescription: "AI made producing faster. In three accounts, the constraint moved to work AI cannot do alone: the objective, the context, and the capacity to verify."
 datePublished: 2026-10-21T08:00:12.537Z
 cuid: cmvhtnx80000102qi75xb9jb6
