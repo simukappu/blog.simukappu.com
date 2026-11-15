@@ -1,6 +1,5 @@
 ---
 title: "4 Lessons from Dissecting Production Systems at Scale — Architecture Dojo 2025"
-seoTitle: "4 Architecture Lessons from Production Systems at Scale"
 seoDescription: "Constraint-driven design, evolvability, reconciliation strategies, operational patterns. Lessons from dissecting real-world systems at AWS Summit."
 datePublished: 2026-04-07T13:29:11.099Z
 cuid: cmnono69k00np1qqe42wh5hj3
@@ -19,15 +18,11 @@ Since 2022, I've been pressure-testing exactly these kinds of bets through "Arch
 Here are 4 lessons I keep coming back to.
 
 > **TL;DR**
-> 
-> 1.  **Constraints drive design.** The most impactful design decisions come from naming what you *can't* change, not from choosing services.
->     
-> 2.  **Design for evolvability.** Structure your system so you can change it, instrument it so you can see what's happening, and evolve when the data tells you to.
->     
-> 3.  **Design your reconciliation.** The question isn't "how do I make this perfectly consistent?" but "what's my reconciliation strategy when it isn't?"
->     
-> 4.  **Start from the problem.** Prepare in parallel, decide sequentially. Services are implementation details; the real design work is understanding the problem's constraints, actors, and failure modes.
->     
+>
+> 1. **Constraints drive design.** The most impactful design decisions come from naming what you *can't* change, not from choosing services.
+> 2. **Design for evolvability.** Structure your system so you can change it, instrument it so you can see what's happening, and evolve when the data tells you to.
+> 3. **Design your reconciliation.** The question isn't "how do I make this perfectly consistent?" but "what's my reconciliation strategy when it isn't?"
+> 4. **Start from the problem.** Prepare in parallel, decide sequentially. Services are implementation details; the real design work is understanding the problem's constraints, actors, and failure modes.
 
 ## 1\. Constraints drive design, so make them explicit
 
@@ -57,12 +52,9 @@ But FIFO ordering introduced a new problem: a single hot item could block the en
 
 Phase 2, implemented later, extracted inventory counts into DynamoDB to eliminate row-level lock contention, the root cause of the performance bottleneck. What made this phased approach work wasn't just "doing less per phase." It was three structural properties that the team deliberately built into the system:
 
-*   **Changeability**: Microservice boundaries isolated the blast radius of each change. The cart service could be modified without touching logistics or customer management.
-    
-*   **Observability**: Traffic instrumentation made it possible to see where pressure was building (which products were spiking, where lock contention was occurring) and feed that data back into design decisions. The hot-item detection described above is one example; the decision to move to Phase 2 was another, driven by observed lock contention patterns after Phase 1 went live.
-    
-*   **Timing**: Observability data informed *when* to evolve. Phase 1 was driven by a 7-month deadline. Phase 2 was driven by the fact that read-write lock contention on the inventory table, the original root cause, remained an ongoing problem even after Phase 1 tamed the throughput issue. Phase 1 controlled the *rate* of writes to the database, but it didn't eliminate the underlying contention: writes and reads still competed for the same physical resources in SQL Server, and a hot product's inventory update could block unrelated reads sharing the same data page. Eliminating that contention required moving the hot data out of the RDBMS entirely, which is what Phase 2 did.
-    
+- **Changeability**: Microservice boundaries isolated the blast radius of each change. The cart service could be modified without touching logistics or customer management.
+- **Observability**: Traffic instrumentation made it possible to see where pressure was building (which products were spiking, where lock contention was occurring) and feed that data back into design decisions. The hot-item detection described above is one example; the decision to move to Phase 2 was another, driven by observed lock contention patterns after Phase 1 went live.
+- **Timing**: Observability data informed *when* to evolve. Phase 1 was driven by a 7-month deadline. Phase 2 was driven by the fact that read-write lock contention on the inventory table, the original root cause, remained an ongoing problem even after Phase 1 tamed the throughput issue. Phase 1 controlled the *rate* of writes to the database, but it didn't eliminate the underlying contention: writes and reads still competed for the same physical resources in SQL Server, and a hot product's inventory update could block unrelated reads sharing the same data page. Eliminating that contention required moving the hot data out of the RDBMS entirely, which is what Phase 2 did.
 
 Evolvability isn't just about making change easy. It's about making the *right* change at the *right* time, and that requires the ability to observe your system's behavior in production and adapt based on what you see. I've seen teams over-provision databases for anticipated peak traffic that never materializes (single-digit percent utilization for months) while funneling batch processing, analytics, and transactional writes through that same database until the aggregate load makes it the actual bottleneck. ZOZOTOWN's approach is the antidote: build the structure that lets you change, instrument so you can see what's happening, and evolve when the data tells you to.
 
@@ -86,12 +78,9 @@ The workflow starts the moment a regional failure is detected. Critically, resou
 
 The three gates then unfold as follows:
 
-1.  **Initiation approval**: the point where the team commits to *preparing* for a switchover. It authorizes stopping the Aurora replica in the primary region and proceeding with the cutover preparation. Costly but reversible: you can abandon the failover and restart replication.
-    
-2.  **Continuation approval**: the point of no return for the data layer. It triggers Aurora Global Database promotion (the `failover_global_cluster` API action) and DNS record changes (`change_resource_record_sets`), redirecting traffic to the standby region. Once the standby database is promoted to primary, you can't simply "undo" it.
-    
-3.  **Service release approval**: the point where user-visible traffic starts flowing. ALB rule changes (`set_rule_priorities`) release traffic to end users, and transaction blocking is lifted. This commits to user impact.
-    
+1. **Initiation approval**: the point where the team commits to *preparing* for a switchover. It authorizes stopping the Aurora replica in the primary region and proceeding with the cutover preparation. Costly but reversible: you can abandon the failover and restart replication.
+2. **Continuation approval**: the point of no return for the data layer. It triggers Aurora Global Database promotion (the `failover_global_cluster` API action) and DNS record changes (`change_resource_record_sets`), redirecting traffic to the standby region. Once the standby database is promoted to primary, you can't simply "undo" it.
+3. **Service release approval**: the point where user-visible traffic starts flowing. ALB rule changes (`set_rule_priorities`) release traffic to end users, and transaction blocking is lifted. This commits to user impact.
 
 This structure also maps to the bank's own business continuity rhythm. Regional banks operate on a daily cycle: nightly batch processing ends at 6:00, ATM transactions begin at 7:00, core banking hours run 9:00–15:00, ATM processing closes at 21:00, and the next batch cycle starts at midnight. The decision to fail over must account for where the bank is in this cycle. A failover at 10:00 during core hours has very different implications than one at 22:00 during batch processing. System metrics alone (latency spikes, error rates, Health Dashboard alerts) can tell you *something is wrong*, but they can't tell you whether the bank should switch regions right now or wait 30 minutes for a natural business checkpoint. That's a human judgment call, and the three gates give the bank's operations team exactly three moments to make that call: "start preparing," "commit to the cutover," and "open for business."
 
@@ -105,7 +94,7 @@ The service selection (CodePipeline for orchestration, Step Functions for step c
 
 I see this pattern across the systems I work with: the architecture is shaped by the problem structure, not by the service catalog. Services are implementation details. The real design work is understanding the problem: its constraints, its actors, its decision points, and its failure modes. When I review architectures that start from the service catalog, they tend to be over-fitted to what the services can do rather than what the problem requires, and they're harder to evolve when the problem changes.
 
-* * *
+---
 
 ## What's next: Architecture Dojo 2026
 
@@ -115,4 +104,4 @@ Consider constraints (Lesson 1): an LLM's output is non-deterministic by nature.
 
 We're tackling these questions at AWS Summit Japan on June 26, 2026. When LLMs hallucinate, costs explode at scale, and agents lose context mid-process, what does good architecture look like? The non-functional requirements we've always cared about (scalability, reliability, cost, security) don't go away. They get harder.
 
-Watch the 2025 session recording (Japanese): [https://youtu.be/L-NcmkkDJMI](https://youtu.be/L-NcmkkDJMI) Past sessions: [2024](https://youtu.be/eoBlprMYx_E) | [2023](https://youtu.be/s9YqEELWutA) | [2022](https://youtu.be/C7trZIt5H3w)
+Watch the 2025 session recording (Japanese): <https://youtu.be/L-NcmkkDJMI> Past sessions: [2024](https://youtu.be/eoBlprMYx_E) | [2023](https://youtu.be/s9YqEELWutA) | [2022](https://youtu.be/C7trZIt5H3w)
