@@ -1,6 +1,5 @@
 ---
 title: "AI Agent Evaluation: What, How, When"
-seoTitle: "3 Axes for AI Agent Evaluation: Target, Method, Stage"
 seoDescription: "A crowded field of AI agent evaluation tools, no shared map. Three axes (Target, Method, Stage) navigate it, plus a 3-execution-model benchmark."
 datePublished: 2026-05-22T08:03:37.984Z
 cuid: cmpgmuuey005h1smtfls5edde
@@ -19,13 +18,10 @@ Mark Brooker has [a useful framing](http://brooker.co.za/blog/2026/01/12/agent-b
 This is the first post in a short series on AI agent evaluation at scale. Here is the map.
 
 > **TL;DR**
-> 
-> 1.  **Three axes navigate the space: Target, Method, Stage.** *Target* is what to evaluate, *Method* is who scores, *Stage* is when it runs. The three move independently, and most "X tool beats Y tool" arguments are really two people standing on different axes.
->     
-> 2.  **Testing and evaluation are different design instincts, not competing implementations of the same idea.** Evaluation platforms put an LLM-as-a-Judge at the spine; test primitives put a deterministic assertion at the spine. They land in different cells of the 3-axis frame and belong to different stages of a CI pipeline: deterministic tests gate every PR, judge-driven evaluations gate staging or canary releases.
->     
-> 3.  **Three execution models, identical assertions: wall time, cost, and trial count land in measurably different cells.** Cassette replay, live LLM, and trace-based evaluator do not form a tool ranking. They form a category boundary that decides which execution models can realistically sit on a per-PR CI gate.
->     
+>
+> 1. **Three axes navigate the space: Target, Method, Stage.** *Target* is what to evaluate, *Method* is who scores, *Stage* is when it runs. The three move independently, and most "X tool beats Y tool" arguments are really two people standing on different axes.
+> 2. **Testing and evaluation are different design instincts, not competing implementations of the same idea.** Evaluation platforms put an LLM-as-a-Judge at the spine; test primitives put a deterministic assertion at the spine. They land in different cells of the 3-axis frame and belong to different stages of a CI pipeline: deterministic tests gate every PR, judge-driven evaluations gate staging or canary releases.
+> 3. **Three execution models, identical assertions: wall time, cost, and trial count land in measurably different cells.** Cassette replay, live LLM, and trace-based evaluator do not form a tool ranking. They form a category boundary that decides which execution models can realistically sit on a per-PR CI gate.
 
 *Where I'm coming from.* I maintain [agentverify](https://github.com/simukappu/agentverify), an OSS pytest plugin that sits in the deterministic-test category this post defines, and the Section 3 benchmark includes it as one of three execution models. The methodology and harness are in a public repository, so the numbers are auditable, but readers should still bring the usual scepticism that comes with an author writing about the space their own tool is in.
 
@@ -77,10 +73,8 @@ Three core evaluators, plus modifiers that ride on top of them. The cores are mu
 
 Two modifiers worth pulling out here:
 
-*   *Adversarial input generation* expands the input side, not the verdict side. Red-team toolchains like [Garak](https://github.com/NVIDIA/garak) (NVIDIA), [PyRIT](https://github.com/Azure/PyRIT) (Microsoft), and [DeepTeam](https://github.com/confident-ai/deepteam) (Confident AI) generate jailbreaks, prompt injections, and other attack inputs; the verdict on each input is still M1 (forbidden-pattern hit) or M2 (judge scoring safety).
-    
-*   *Runtime application* takes an evaluator and inserts it synchronously into the inference path (stage S4 below). [Bedrock Guardrails](https://docs.aws.amazon.com/bedrock/latest/userguide/guardrails.html) (M1 + M2 on model outputs), [AgentCore Policy / Gateway](https://docs.aws.amazon.com/bedrock-agentcore/latest/devguide/policy.html) (M1 on tool calls), and OSS counterparts like [NeMo Guardrails](https://github.com/NVIDIA/NeMo-Guardrails) and [Llama Guard](https://huggingface.co/meta-llama/Llama-Guard-3-8B) all operate as runtime modifiers.
-    
+- *Adversarial input generation* expands the input side, not the verdict side. Red-team toolchains like [Garak](https://github.com/NVIDIA/garak) (NVIDIA), [PyRIT](https://github.com/Azure/PyRIT) (Microsoft), and [DeepTeam](https://github.com/confident-ai/deepteam) (Confident AI) generate jailbreaks, prompt injections, and other attack inputs; the verdict on each input is still M1 (forbidden-pattern hit) or M2 (judge scoring safety).
+- *Runtime application* takes an evaluator and inserts it synchronously into the inference path (stage S4 below). [Bedrock Guardrails](https://docs.aws.amazon.com/bedrock/latest/userguide/guardrails.html) (M1 + M2 on model outputs), [AgentCore Policy / Gateway](https://docs.aws.amazon.com/bedrock-agentcore/latest/devguide/policy.html) (M1 on tool calls), and OSS counterparts like [NeMo Guardrails](https://github.com/NVIDIA/NeMo-Guardrails) and [Llama Guard](https://huggingface.co/meta-llama/Llama-Guard-3-8B) all operate as runtime modifiers.
 
 Two further modifiers sit in the background here and get the next post's attention: *statistical aggregation* (running the same input N times and reading the distribution) and *composite evaluation* (weighting M1, M2, and M3 verdicts), both most useful at the deterministic/probabilistic boundary.
 
@@ -111,10 +105,8 @@ Two design instincts run through the agent tooling. One puts an LLM-as-a-Judge a
 
 The two instincts split cleanly:
 
-*   *Tests* check whether the spec-defined behavior still holds. Pass/fail. They block PRs. They live next to the code they describe.
-    
-*   *Evaluations* measure quality on continuous metrics. They support comparison across systems and across time. They live in datasets that experts curate.
-    
+- *Tests* check whether the spec-defined behavior still holds. Pass/fail. They block PRs. They live next to the code they describe.
+- *Evaluations* measure quality on continuous metrics. They support comparison across systems and across time. They live in datasets that experts curate.
 
 In a CI/CD pipeline the natural shape is to run them as different stages. Deterministic unit tests on every PR, each finishing in seconds and the suite in minutes. Quality gates with judge-LLM scoring on staging or release candidates, finishing in minutes to hours. The gates can sit in the same pipeline; they should not pretend to be the same step.
 
@@ -128,12 +120,9 @@ The split maps onto all three axes. On Target, platforms emphasize T1 and T2 ("h
 
 Trying to merge the two sides into one tool runs into design choices that pull in opposite directions:
 
-*   *Instrumentation.* Platforms want `@observe` decorators wrapping agent functions to emit traces. Primitives want to patch the LLM SDK so agent code is unchanged. Either choice is reasonable; both as defaults is not.
-    
-*   *CLI surface.* Platforms want their own CLI for dataset management, cloud sync, shared reports. Primitives want pytest-native, so existing CI templates, pytest-xdist, and pytest-cov plug in unchanged.
-    
-*   *Where the spec lives.* Evaluation puts the spec in the dataset (curated by humans, often domain experts, hosted in the cloud). Testing puts the spec in the assertion (in git, reviewed in PRs, versioned with the code).
-    
+- *Instrumentation.* Platforms want `@observe` decorators wrapping agent functions to emit traces. Primitives want to patch the LLM SDK so agent code is unchanged. Either choice is reasonable; both as defaults is not.
+- *CLI surface.* Platforms want their own CLI for dataset management, cloud sync, shared reports. Primitives want pytest-native, so existing CI templates, pytest-xdist, and pytest-cov plug in unchanged.
+- *Where the spec lives.* Evaluation puts the spec in the dataset (curated by humans, often domain experts, hosted in the cloud). Testing puts the spec in the assertion (in git, reviewed in PRs, versioned with the code).
 
 Both designs are defensible, and choosing a default for one steers the framework's whole personality; the two categories are most useful paired, not when one tries to absorb the other. The boundary between them isn't frozen, managed platforms are extending toward inline / local-dev workflows and test primitives are reaching into production observability, but the DNA stays distinct as the surface areas grow.
 
@@ -141,12 +130,9 @@ Both designs are defensible, and choosing a default for one steers the framework
 
 Numbers help. I ran a benchmark on three execution models against two agent subjects: a Strands single-agent weather forecaster on Bedrock Anthropic Claude Sonnet 4.6, and a LangGraph multi-agent supervisor on OpenAI gpt-5.4-mini. Identical T3 assertions ran on each subject:
 
-*   **A — Inline cassette replay**: pytest with SDK patching (run here on agentverify). Under the *dev* scenario A drives a live LLM to record the cassette; under the *ci* scenario the same test replays the cassette and skips the LLM call entirely. The A-dev numbers double as a control: A-dev versus A-ci isolates what cassette replay saves, holding the assertion library constant.
-    
-*   **B — Decorator + judge**: trace decorator with an LLM-as-a-Judge metric, live LLM under both scenarios (run here on DeepEval `@observe` + `ToolCorrectnessMetric`).
-    
-*   **C — Trace export + Custom evaluator**: OTLP push of agent traces to a code-based evaluator on Lambda, live LLM under both scenarios (run here on AgentCore Evaluations Custom code-based evaluator).
-    
+- **A — Inline cassette replay**: pytest with SDK patching (run here on agentverify). Under the *dev* scenario A drives a live LLM to record the cassette; under the *ci* scenario the same test replays the cassette and skips the LLM call entirely. The A-dev numbers double as a control: A-dev versus A-ci isolates what cassette replay saves, holding the assertion library constant.
+- **B — Decorator + judge**: trace decorator with an LLM-as-a-Judge metric, live LLM under both scenarios (run here on DeepEval `@observe` + `ToolCorrectnessMetric`).
+- **C — Trace export + Custom evaluator**: OTLP push of agent traces to a code-based evaluator on Lambda, live LLM under both scenarios (run here on AgentCore Evaluations Custom code-based evaluator).
 
 Two scenarios per cell: *dev* (first run, no cassette, cold cache) and *ci* (PR-time repeat, with cassette / cache). Five trials each, trimmed mean of the middle three runs.
 
@@ -166,27 +152,19 @@ The cassette's strength here is also its boundary. Pinning the trajectory at rec
 
 A few caveats on the numbers:
 
-*   The wall-time figures include pytest startup and subprocess overhead because they are measured around `subprocess.run`. The 1.7-second figure is "what the developer sees on a PR," not "the assertion engine in isolation."
-    
-*   The hardware was a 12-CPU macOS arm64 box on Python 3.14. Absolute seconds shift on different hardware, but the order-of-magnitude gap on CI does not.
-    
-*   AgentCore Evaluations may carry an additional per-evaluation charge whose price is not yet publicly documented; the dollar figures here cover the LLM portion only.
-    
+- The wall-time figures include pytest startup and subprocess overhead because they are measured around `subprocess.run`. The 1.7-second figure is "what the developer sees on a PR," not "the assertion engine in isolation."
+- The hardware was a 12-CPU macOS arm64 box on Python 3.14. Absolute seconds shift on different hardware, but the order-of-magnitude gap on CI does not.
+- AgentCore Evaluations may carry an additional per-evaluation charge whose price is not yet publicly documented; the dollar figures here cover the LLM portion only.
 
 The full results, methodology, and counting rules live with the [agentverify execution-model trajectory benchmark](https://github.com/simukappu/agentverify/tree/main/benchmarks/execution-model-trajectory) (this run: `results-2026-05-17T232008.md`).
 
 Reading these numbers as "agentverify is faster" misses the point. The three execution models occupy measurably different design cells: cassette replay behaves like a test, trace decorator and trace export behave like evaluations, and the right move on a real PR is to combine them. A team would reasonably layer:
 
-*   a deterministic test primitive on T3 × M1 × S2 for trajectory regressions
-    
-*   AgentCore Evaluations or DeepEval on T1 × M2 × S3 for response-quality regressions
-    
-*   Bedrock Guardrails on T1 + T5 × M1+M2 (Runtime modifier) × S4 for content-level filtering of model outputs
-    
-*   AgentCore Policy on T5 × M1 (Runtime modifier) × S4 for authorization on tool calls
-    
-*   observability across all of them.
-    
+- a deterministic test primitive on T3 × M1 × S2 for trajectory regressions
+- AgentCore Evaluations or DeepEval on T1 × M2 × S3 for response-quality regressions
+- Bedrock Guardrails on T1 + T5 × M1+M2 (Runtime modifier) × S4 for content-level filtering of model outputs
+- AgentCore Policy on T5 × M1 (Runtime modifier) × S4 for authorization on tool calls
+- observability across all of them.
 
 ## Closing — design the CI before picking the tool
 
