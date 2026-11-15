@@ -1,6 +1,5 @@
 ---
 title: "Scaling Peak Traffic: From Planned Offloads to Unpredictable Bursts"
-seoTitle: "3 Peak Traffic Patterns: The 0-to-N Problem Load Tests Miss"
 seoDescription: "From planned offloads to unpredictable bursts: three peak traffic patterns, and why the 0 → N arrival pattern breaks systems that pass every load test"
 datePublished: 2026-04-14T13:26:07.045Z
 cuid: cmnynn6wy00dx2ble67kjfex9
@@ -17,13 +16,10 @@ Peak traffic forces a design choice: what do you include in your scaling scope? 
 Over the past few years, I've worked on peak traffic offloading designs across different systems: a large e-commerce platform handling tens of thousands of requests per second at peak, and a high-traffic web application serving millions of daily users. The patterns here are drawn from real systems I've worked on; specifics are generalized. What follows are three patterns that emerged from that work. They're presented in the order I encountered them, because each pattern's limitations motivated the next.
 
 > **TL;DR**
-> 
-> 1.  **Compute + data offload.** Scale both application and database layers into a burst environment. Powerful but expensive: database replicas require continuous replication and warm-up time, making on-demand provisioning impractical for short-duration peaks.
->     
-> 2.  **Compute-only shot scaling.** Remove the data layer from the burst scope. Cheaper, but "0 → N" service-in is harder than it looks. Load tests that ramp up gradually won't catch what happens when production traffic hits all at once.
->     
-> 3.  **Serverless reactive scaling.** Change the scaling model itself. Don't replace containers; compose them with FaaS as a burst-only layer. You get per-second elasticity for unpredictable spikes, but you're now operating two runtimes.
->     
+>
+> 1. **Compute + data offload.** Scale both application and database layers into a burst environment. Powerful but expensive: database replicas require continuous replication and warm-up time, making on-demand provisioning impractical for short-duration peaks.
+> 2. **Compute-only shot scaling.** Remove the data layer from the burst scope. Cheaper, but "0 → N" service-in is harder than it looks. Load tests that ramp up gradually won't catch what happens when production traffic hits all at once.
+> 3. **Serverless reactive scaling.** Change the scaling model itself. Don't replace containers; compose them with FaaS as a burst-only layer. You get per-second elasticity for unpredictable spikes, but you're now operating two runtimes.
 
 ## Pattern 1: Compute + data offload, where the data layer changes the economics
 
@@ -141,6 +137,6 @@ These patterns share a common thread with what I wrote about in my [previous pos
 
 The answers change. The questions don't.
 
-* * *
+---
 
 If you've hit the 0 → N problem in production, or found a way to compose scaling models that I haven't covered here, I'd like to hear about it.
