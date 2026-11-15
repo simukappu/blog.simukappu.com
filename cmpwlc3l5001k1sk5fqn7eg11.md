@@ -1,6 +1,5 @@
 ---
 title: "Three Pivots in AI-Driven Development"
-seoTitle: "AI-Driven Development: 3 Pivots That Move the Line"
 seoDescription: "A coding agent won't bend your productivity curve. A team does. Three durable pivots: workflow redesign, an upstream rhythm, an agreed metric."
 datePublished: 2026-06-02T12:05:22.605Z
 cuid: cmpwlc3l5001k1sk5fqn7eg11
@@ -17,13 +16,10 @@ Coding agents, models, and IDE plugins ship new versions every few months, and m
 *Where I'm coming from.* I work alongside engineering organizations as they adopt AI-driven development. AWS publishes [AI-Driven Development Life Cycle](https://aws.amazon.com/blogs/devops/ai-driven-development-life-cycle/) (AI-DLC) as one practice among several, and I treat it that way: a well-shaped option, not the answer. My vantage point is a practitioner's, the view of someone who has helped roll it out rather than an author grading it. Two of the three pivots below I have watched and felt directly. The third, measurement, is the one I am least done thinking about. I share it the way I share it with customers in briefings: as Amazon's hard-won lesson and as the problem the teams I work with are wrestling with right now, rather than as something I have fully closed out myself.
 
 > **TL;DR**
-> 
-> 1.  **Pivot 1: Workflow redesign comes first.** Tools do not move the line. The slope changes when a team rebuilds its workflow around the agent, not before. AI amplifies whatever pipeline it lands on.
->     
-> 2.  **Pivot 2: Move the control rhythm upstream.** Apply Plan → Clarify → Implement to requirements and design, not just implementation. AWS's AI-DLC is one of the clearest off-the-shelf implementations, and you can try it today.
->     
-> 3.  **Pivot 3: Agree on an output metric and start measuring.** Cost, release count, release cycle, anything that lets you justify the return. Pick one the organization agrees on, start measuring, and mechanize only what proves durable across teams.
->     
+>
+> 1. **Pivot 1: Workflow redesign comes first.** Tools do not move the line. The slope changes when a team rebuilds its workflow around the agent, not before. AI amplifies whatever pipeline it lands on.
+> 2. **Pivot 2: Move the control rhythm upstream.** Apply Plan → Clarify → Implement to requirements and design, not just implementation. AWS's AI-DLC is one of the clearest off-the-shelf implementations, and you can try it today.
+> 3. **Pivot 3: Agree on an output metric and start measuring.** Cost, release count, release cycle, anything that lets you justify the return. Pick one the organization agrees on, start measuring, and mechanize only what proves durable across teams.
 
 ![](https://cdn.hashnode.com/uploads/covers/69d1f25c6792e486f60903fd/b4045bc3-046e-4be9-9f93-586f056edcad.png align="center")
 
@@ -37,12 +33,9 @@ I first heard the cleanest framing for why from Amazon's agentic AI leadership: 
 
 So the slope responds to the team, not the install date. It turns once the team stops asking "how do we apply AI to the way we already work" and starts asking "how would we work if the agent were the default author." Concretely, in the teams where I watched the line finally move, three things changed in the workflow itself:
 
-*   **PR granularity** shifted to units the agent could produce and a human could review in one sitting, rather than the units a human used to write over three days.
-    
-*   **Review focus** moved from line-by-line correctness toward conformance to the spec, because the agent rarely makes the typo a human reviewer was trained to catch, and often makes the design-intent mistake they were not.
-    
-*   **Task decomposition** was rewritten into parallelizable pieces, so several agent-driven changes could be in flight at once instead of queued behind one developer's working memory.
-    
+- **PR granularity** shifted to units the agent could produce and a human could review in one sitting, rather than the units a human used to write over three days.
+- **Review focus** moved from line-by-line correctness toward conformance to the spec, because the agent rarely makes the typo a human reviewer was trained to catch, and often makes the design-intent mistake they were not.
+- **Task decomposition** was rewritten into parallelizable pieces, so several agent-driven changes could be in flight at once instead of queued behind one developer's working memory.
 
 The Mantle account lines up with this. The same talk lists a monorepo holding code, tests, and docs together, extensive AI-generated documentation, self-contained local testing, thousands of unit tests, and code deliberately structured to be legible to an agent. Those are workflow decisions, not tool decisions, and together they give the amplifier a clean signal.
 
