@@ -1,6 +1,5 @@
 ---
 title: "Three Responses to AI's Probabilistic Core — Architecture Dojo 2026"
-seoTitle: "3 Architecture Responses to AI's Probabilistic Core"
 seoDescription: "An LLM now sits at the center of your system. Three responses from Architecture Dojo 2026: control from outside, distribute trust, observe and adapt."
 datePublished: 2026-08-07T10:57:24.527Z
 cuid: cmsitywvj00000ajmai7bf0vh
@@ -19,13 +18,10 @@ Neither answer was built alone, though. I wrote the problems and circulated them
 ![](https://cdn.hashnode.com/uploads/covers/69d1f25c6792e486f60903fd/fc92b1ee-e911-4705-a9e9-c4547db09421.jpg align="center")
 
 > **TL;DR**
-> 
-> 1.  **Control the LLM from outside.** Cost and latency targets are met not inside the model but in the deterministic architecture around it: semantic cache, quality-based routing, thresholds, templates. The shopping assistant cut inference cost to a fifth, closing a 4.9x budget gap with 3.4% quality degradation.
->     
-> 2.  **Distribute trust; keep ownership human.** Verifying probabilistic output with probabilistic means doesn't close the loop. The development platform splits the roles: AI generates, deterministic machinery judges (formal specs, reference-model differential tests), humans decide.
->     
-> 3.  **Observe and adapt.** A probabilistic core cannot be fully designed up front. Both answers end in the same loop: observe production behavior, adapt thresholds and specs. Build that loop into the architecture from day one.
->     
+>
+> 1. **Control the LLM from outside.** Cost and latency targets are met not inside the model but in the deterministic architecture around it: semantic cache, quality-based routing, thresholds, templates. The shopping assistant cut inference cost to a fifth, closing a 4.9x budget gap with 3.4% quality degradation.
+> 2. **Distribute trust; keep ownership human.** Verifying probabilistic output with probabilistic means doesn't close the loop. The development platform splits the roles: AI generates, deterministic machinery judges (formal specs, reference-model differential tests), humans decide.
+> 3. **Observe and adapt.** A probabilistic core cannot be fully designed up front. Both answers end in the same loop: observe production behavior, adapt thresholds and specs. Build that loop into the architecture from day one.
 
 ## Problem 1: Hold the quality, cut the cost 5x
 
@@ -93,6 +89,6 @@ There is one more thing I hoped that room would carry home, because it is the re
 
 Neither problem on that stage was solved by choosing a product. Both answers run on managed services, and in both the gap was closed by what was built around them. In my conversations with customers the pressure is already pointing back toward engineering: token costs are becoming a line item that draws management attention. Engineering ingenuity is not what the AI era retires. It is what the AI era demands, and there is more of that work ahead than any of us can do alone, which is exactly how a dojo is supposed to work. The problems will keep changing. The way we design against them, I am increasingly convinced, does not have to. Happy architecting!
 
-Session deck (Japanese): [2026](https://pages.awscloud.com/rs/112-TZM-766/images/R01-03_0626_ARC446_v2.pdf)  
-Past session videos (Japanese): [2025](https://youtu.be/L-NcmkkDJMI) | [2024](https://youtu.be/eoBlprMYx_E) | [2023](https://youtu.be/s9YqEELWutA) | [2022](https://youtu.be/C7trZIt5H3w)  
+Session deck (Japanese): [2026](https://pages.awscloud.com/rs/112-TZM-766/images/R01-03_0626_ARC446_v2.pdf)\
+Past session videos (Japanese): [2025](https://youtu.be/L-NcmkkDJMI) | [2024](https://youtu.be/eoBlprMYx_E) | [2023](https://youtu.be/s9YqEELWutA) | [2022](https://youtu.be/C7trZIt5H3w)\
 Earlier posts in this series: [Architecture Dojo](https://blog.simukappu.com/series/architecture-dojo) | [2025](https://blog.simukappu.com/4-lessons-from-dissecting-production-systems-at-scale-architecture-dojo-2025) | [2024](https://blog.simukappu.com/resilience-beyond-multi-az-bulkheads-and-shock-absorbers-architecture-dojo-2024) | [2022](https://blog.simukappu.com/scaling-without-losing-count-architecture-dojo-2022)
