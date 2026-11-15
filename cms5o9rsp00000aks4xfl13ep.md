@@ -1,6 +1,5 @@
 ---
 title: "When the PoC Passed but Production Didn't — Defining "Good Enough" at National Scale"
-seoTitle: "3 Lessons from a National-Scale Data Warehouse Migration"
 seoDescription: "A PoC that passed in 2022 failed under production load in 2025. Not a regression: the criteria had matured. Growing "good enough" at national scale."
 datePublished: 2026-07-29T05:56:53.138Z
 cuid: cms5o9rsp00000aks4xfl13ep
@@ -17,13 +16,10 @@ The project behind that sentence is one of the largest data warehouse migrations
 *Where I'm coming from.* I spent more than six years alongside this migration as a solutions architect, from the first proposal through the PoC to the cutover. The customer, LY Corporation, has told the story from their side at AWS Summit Japan 2026, and every customer-side number in this post comes from that [public deck (in Japanese)](https://pages.awscloud.com/rs/112-TZM-766/images/R14_0625_4_ANT325_v2.pdf). I refer to the source system only as the previous on-premises warehouse, and I stay inside what the customer has shared publicly. The customer's team reviewed a draft of this post before publication to confirm it stays within that boundary. What follows is the engineering and project judgment I watched up close, not the commercial side. The views are my own.
 
 > **TL;DR**
-> 
-> 1.  **"Same or better than the previous system" only becomes an acceptance criterion once you decompose it.** Three-grade scoring, workaround costs priced in, and real queries instead of standard benchmarks turned a slogan into something a company could decide with.
->     
-> 2.  **At national scale, the criteria only fully arrive under load.** Hunting down the minority of queries that got slower reads as tuning, and it is also how you find what the first criteria failed to capture.
->     
-> 3.  **A missing feature deserves one of three stances: wait for it, accept its absence for good, or keep the workaround cheap.** Assign a stance per gap, and never let a single "it can't" hold the whole migration hostage.
->     
+>
+> 1. **"Same or better than the previous system" only becomes an acceptance criterion once you decompose it.** Three-grade scoring, workaround costs priced in, and real queries instead of standard benchmarks turned a slogan into something a company could decide with.
+> 2. **At national scale, the criteria only fully arrive under load.** Hunting down the minority of queries that got slower reads as tuning, and it is also how you find what the first criteria failed to capture.
+> 3. **A missing feature deserves one of three stances: wait for it, accept its absence for good, or keep the workaround cheap.** Assign a stance per gap, and never let a single "it can't" hold the whole migration hostage.
 
 ## Turning "same or better" into something you can score
 
@@ -49,7 +45,7 @@ The final configuration deserves a pause. [Multi-AZ](https://docs.aws.amazon.com
 
 Running and revising until the criteria hold has one boundary worth naming: a few settings can only be decided before data arrives, and no later run will reopen them. The previous warehouse compared strings case-insensitively; Redshift can match that behavior with database-level collation, but only [at creation time](https://docs.aws.amazon.com/redshift/latest/dg/r_CREATE_DATABASE.html). Reproduce it inside queries instead, by wrapping join keys in collation functions, and joins quietly degrade: merge joins collapse into hash joins, and intermediate results spill to disk by the terabyte. The last row of the tuning table below shows what that costs. Growing the criteria under load works because most migration decisions are what Amazon calls [two-way doors](https://www.sec.gov/Archives/edgar/data/1018724/000119312516530910/d168744dex991.htm): reversible choices that the cloud makes cheap to walk back through, run after run. A few are one-way doors, and in a migration they rarely announce themselves; this one hid inside a collation setting. Part of the design work is finding those doors before the first table loads.
 
-Most queries got faster after migration. A stubborn minority got slower, and at this scale the minority is not a rounding error; it is where the timeline lives. The hunting method, which the colleague who led performance engineering presented publicly at [AWS Summit Tokyo 2023 (deck in Japanese)](https://pages.awscloud.com/rs/112-TZM-766/images/AWS-36_AWS-Summit-2023_Analytics.pdf), fits in two moves. First, decompose time before guessing: the [SYS\_QUERY\_HISTORY](https://docs.aws.amazon.com/redshift/latest/dg/SYS_QUERY_HISTORY.html) system view splits elapsed time into queue wait, compile, planning, execution, and lock wait, killing whole categories of speculation in seconds. A query stuck behind a lock, a query stuck in a mis-sized workload-management queue, and a query that spends three minutes being compiled are three different problems, and only one of them will respond to data-layout tuning. Second, classify the slow ones by which layer saturates which physical resource; four patterns covered most of what this project met. The numbers below come from the public deck's benchmark reproduction, not from customer data:
+Most queries got faster after migration. A stubborn minority got slower, and at this scale the minority is not a rounding error; it is where the timeline lives. The hunting method, which the colleague who led performance engineering presented publicly at [AWS Summit Tokyo 2023 (deck in Japanese)](https://pages.awscloud.com/rs/112-TZM-766/images/AWS-36_AWS-Summit-2023_Analytics.pdf), fits in two moves. First, decompose time before guessing: the [SYS_QUERY_HISTORY](https://docs.aws.amazon.com/redshift/latest/dg/SYS_QUERY_HISTORY.html) system view splits elapsed time into queue wait, compile, planning, execution, and lock wait, killing whole categories of speculation in seconds. A query stuck behind a lock, a query stuck in a mis-sized workload-management queue, and a query that spends three minutes being compiled are three different problems, and only one of them will respond to data-layout tuning. Second, classify the slow ones by which layer saturates which physical resource; four patterns covered most of what this project met. The numbers below come from the public deck's benchmark reproduction, not from customer data:
 
 | Bottleneck pattern | What saturates | Representative fix | Benchmark before → after |
 | --- | --- | --- | --- |
