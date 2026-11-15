@@ -1,6 +1,5 @@
 ---
 title: "Resilience Beyond Multi-AZ: Bulkheads and Shock Absorbers — Architecture Dojo 2024"
-seoTitle: "2 Patterns for Resilience Beyond Multi-AZ"
 seoDescription: "Multi-AZ is the baseline. Two production incidents and two resilience patterns: bulkheads for blast radius, shock absorbers for dependency failures."
 datePublished: 2026-05-05T14:02:18.832Z
 cuid: cmosp6mob00bx2flrfhnj04up
@@ -21,13 +20,10 @@ This post isn't a replay of the session. It starts with two production incidents
 ![](https://cdn.hashnode.com/uploads/covers/69d1f25c6792e486f60903fd/f556f3b3-7691-44db-89ca-ff63715b2a48.jpg align="center")
 
 > **TL;DR**
-> 
-> 1.  **Gray failures turn "infrastructure is slightly broken" into "application is fully broken."** The mismatch between health definitions at different layers is what makes a small blast radius explode.
->     
-> 2.  **Asymmetric protection is the most repeatable failure mode.** Guarding the write path while leaving the read path exposed is how a well-engineered service goes down from a dependency it thought it had handled.
->     
-> 3.  **Bulkheads bound blast radius statically. Shock absorbers contain failures dynamically.** A bulkhead only works if the layers on both sides agree on when it's breached; a shock absorber only works if it covers every path that touches the dependency.
->     
+>
+> 1. **Gray failures turn "infrastructure is slightly broken" into "application is fully broken."** The mismatch between health definitions at different layers is what makes a small blast radius explode.
+> 2. **Asymmetric protection is the most repeatable failure mode.** Guarding the write path while leaving the read path exposed is how a well-engineered service goes down from a dependency it thought it had handled.
+> 3. **Bulkheads bound blast radius statically. Shock absorbers contain failures dynamically.** A bulkhead only works if the layers on both sides agree on when it's breached; a shock absorber only works if it covers every path that touches the dependency.
 
 ## Case 1: A partial failure that became a region-wide outage
 
@@ -35,14 +31,10 @@ An infrastructure-level event took out a small single-digit percentage of comput
 
 The application depended on a stateful middleware layer (think of a message broker, or anything that sits between services and can hold up upstream work when it stalls), running on its own compute with its own attached block storage. Here is what broke, layer by layer:
 
-*   **The middleware's compute stayed up.** Its processes responded, its health checks passed. From the surface it looked fine.
-    
-*   **The block storage on a subset of its nodes became unresponsive.** Not offline: reads and writes arrived at the volume and then hung, accepted but never completing in any reasonable time.
-    
-*   **The middleware's own failover didn't trigger.** Its failure detection was tuned for node loss, not for "this node is alive but its storage is pathologically slow."
-    
-*   **The application had no visibility into the stall.** Its retry and timeout behavior couldn't distinguish "the middleware is slow" from "the middleware is up but failing silently," so the longer it hung, the more upstream work backed up behind it.
-    
+- **The middleware's compute stayed up.** Its processes responded, its health checks passed. From the surface it looked fine.
+- **The block storage on a subset of its nodes became unresponsive.** Not offline: reads and writes arrived at the volume and then hung, accepted but never completing in any reasonable time.
+- **The middleware's own failover didn't trigger.** Its failure detection was tuned for node loss, not for "this node is alive but its storage is pathologically slow."
+- **The application had no visibility into the stall.** Its retry and timeout behavior couldn't distinguish "the middleware is slow" from "the middleware is up but failing silently," so the longer it hung, the more upstream work backed up behind it.
 
 None of these is a bug in isolation. Compute-layer health checks, failover tuned for node loss, client-side timeouts: each is standard practice, and none was calibrated for a storage device that was simultaneously attached, responsive to control-plane queries, and unable to complete I/O on the data plane. The machinery for reacting to failures existed everywhere; none of it was wired to recognize this shape in real time.
 
@@ -52,12 +44,9 @@ Adding that metric to the alerting set was the easy half. The harder half was pr
 
 It would be easy to read this as a story about a middleware layer that wasn't doing its job. That's neither fair nor useful. No dependency layer is fully resistant to gray failures, not this middleware and, honestly, not the managed cloud services underneath it either. Managed services are far better at detection and recovery than most self-managed alternatives, but they don't eliminate gray failures: the state space of a large distributed system is effectively infinite, and every layer eventually meets a partial failure mode its detection wasn't designed for. So the resilience problem doesn't stop at whether your dependency is well-designed. It extends to what your application does when a well-designed dependency fails in a way neither of you can detect, because the vendor isn't going to answer that for you. You're the only one who can place a buffer between their layer and yours. In this incident, three things actually worked:
 
-*   **Decouple the synchronous path from the dependency.** Moving the publish off the request-handling thread meant a stalled dependency couldn't stall a user-facing transaction. This is the single highest-leverage change when a gray failure has taken you down.
-    
-*   **Add dependencies across independent failure domains.** A secondary read path that doesn't share the same infrastructure (a different region, a cache on different storage, a degraded-but-working fallback) turns a single failure into a manageable degradation. This one is hard to justify because it costs real money and the benefit only shows up during incidents.
-    
-*   **Keep the chaos catalog current.** This failure mode wasn't in any off-the-shelf fault-injection toolkit, and without a purpose-built reproduction any fix is a guess. The catalog is never finished; you keep adding to it as you meet new shapes in production.
-    
+- **Decouple the synchronous path from the dependency.** Moving the publish off the request-handling thread meant a stalled dependency couldn't stall a user-facing transaction. This is the single highest-leverage change when a gray failure has taken you down.
+- **Add dependencies across independent failure domains.** A secondary read path that doesn't share the same infrastructure (a different region, a cache on different storage, a degraded-but-working fallback) turns a single failure into a manageable degradation. This one is hard to justify because it costs real money and the benefit only shows up during incidents.
+- **Keep the chaos catalog current.** This failure mode wasn't in any off-the-shelf fault-injection toolkit, and without a purpose-built reproduction any fix is a guess. The catalog is never finished; you keep adding to it as you meet new shapes in production.
 
 Each is a version of the same move: placing shock absorbers between the application and the thing that might fail in a way you can't see coming. That's what the Dojo's second challenge was asking.
 
@@ -98,14 +87,10 @@ Challenge 2 was the one I was on stage for: an e-commerce application (CloudFron
 
 A buffer around a flaky dependency does two jobs: reduce load on it when it's struggling (rate limiting, circuit breakers, caches) and contain the blast radius of its failures (backoff retries, circuit breakers, asynchronous processing). Circuit breakers do both, failing fast while giving the dependency a break; everything else specializes. I proposed wrapping the dependency in a proxy service that owns this logic, so application code never handles retries or circuit breakers inline: it calls the proxy, and the proxy decides what to do. The proxy exposes four access modes the application picks per request:
 
-1.  **Synchronous write.** Call now, retry on transient failure, fail fast once the circuit opens. Bounded latency, errors bubble up.
-    
-2.  **Asynchronous write.** Enqueue, return a request ID immediately, process in the background, let the caller poll. The caller never waits on the dependency.
-    
-3.  **Direct read.** Fetch fresh data and populate the cache on the way back.
-    
-4.  **Cached read.** Serve from cache on hit; on miss, return an error and let the caller fall back to a direct read if it wants fresh data badly enough.
-    
+1. **Synchronous write.** Call now, retry on transient failure, fail fast once the circuit opens. Bounded latency, errors bubble up.
+2. **Asynchronous write.** Enqueue, return a request ID immediately, process in the background, let the caller poll. The caller never waits on the dependency.
+3. **Direct read.** Fetch fresh data and populate the cache on the way back.
+4. **Cached read.** Serve from cache on hit; on miss, return an error and let the caller fall back to a direct read if it wants fresh data badly enough.
 
 ![](https://cdn.hashnode.com/uploads/covers/69d1f25c6792e486f60903fd/32ee1e37-edab-45b4-bc30-73d7cf631b91.png align="center")
 
@@ -132,5 +117,5 @@ The session closed on a metaphor that still works for me. Think of the counters 
 
 If you're carrying the scars of a gray failure that should have stayed in one AZ, or a dependency outage that took down more than it should have, I'd genuinely like to hear about it. The patterns that end up in posts like this one come from those incidents. They don't come from Dojo sessions alone.
 
-Watch the 2024 session recording (Japanese): [https://youtu.be/eoBlprMYx\_E](https://youtu.be/eoBlprMYx_E)  
+Watch the 2024 session recording (Japanese): <https://youtu.be/eoBlprMYx_E>\
 Past sessions: [2025](https://youtu.be/L-NcmkkDJMI) | [2023](https://youtu.be/s9YqEELWutA) | [2022](https://youtu.be/C7trZIt5H3w)
