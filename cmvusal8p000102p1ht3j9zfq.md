@@ -1,6 +1,5 @@
 ---
 title: "Sent, Accepted, Reached: Automating a Home Theater That Is Also My Office"
-seoTitle: "3 Home Theater Automation Lessons: Sent, Accepted, Reached"
 seoDescription: "Alexa said the theater was shutting down. The projector stayed on. Sent, accepted, reached: three facts my home automation had to log apart."
 datePublished: 2026-10-30T09:42:51.117Z
 cuid: cmvusal8p000102p1ht3j9zfq
